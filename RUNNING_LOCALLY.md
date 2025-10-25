@@ -1,20 +1,108 @@
 # Running the Backend Locally - Complete Guide
 
-This guide provides step-by-step instructions to run the FastAPI backend locally from scratch.
+This guide provides step-by-step instructions to run the FastAPI backend locally from a completely clean environment.
+
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Complete Setup from Clean Image](#complete-setup-from-clean-image) - **Start here for new environments**
+3. [Copy-Paste Single Command](#copy-paste-single-command-for-quick-setup)
+4. [Detailed Step-by-Step Instructions](#detailed-step-by-step-instructions)
+5. [Testing the API](#step-6-test-the-api)
+6. [Running Tests](#step-7-run-tests)
+7. [Quick Start (Subsequent Runs)](#quick-start-subsequent-runs)
+8. [Troubleshooting](#troubleshooting)
+9. [Test Results Summary](#test-results-summary)
+10. [Verified Functionality](#verified-functionality)
 
 ## Prerequisites
 
-- Python 3.11+ (already installed in this environment)
-- Git (already installed)
+This guide assumes you're starting from a clean Ubuntu/Debian-based system with:
+- Python 3.10+ available
+- Git available
+- Root or sudo access
 
-## Step 1: Install Required Tools
+All other dependencies will be installed in the steps below.
 
-### Install uv (Python package manager)
+## Complete Setup from Clean Image
+
+Run these commands in order to set up everything from scratch:
 
 ```bash
-# If not already installed
+# Step 1: Update package manager and install PostgreSQL
+apt-get update
+apt-get install -y postgresql postgresql-contrib
+
+# Step 2: Start PostgreSQL service
+service postgresql start
+
+# Step 3: Configure PostgreSQL database and user
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'changethis';"
+sudo -u postgres psql -c "CREATE DATABASE app;"
+
+# Step 4: Install uv (Python package manager) if not already installed
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Step 5: Add uv to PATH for current session (if just installed)
+export PATH="/root/.local/bin:$PATH"
+
+# Step 6: Navigate to backend directory
+cd /home/user/swapcard9_fastapi/backend
+
+# Step 7: Install Python dependencies with uv
+uv sync
+
+# Step 8: Activate virtual environment
+source .venv/bin/activate
+
+# Step 9: Check database connection
+python app/backend_pre_start.py
+
+# Step 10: Run database migrations
+alembic upgrade head
+
+# Step 11: Create initial data (superuser)
+python app/initial_data.py
+
+# Step 12: Start the development server
+fastapi dev app/main.py
 ```
+
+The server will now be running at http://localhost:8000
+
+## Copy-Paste Single Command (For Quick Setup)
+
+If you want to run everything in one command, copy and paste this:
+
+```bash
+apt-get update && \
+apt-get install -y postgresql postgresql-contrib && \
+service postgresql start && \
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'changethis';" && \
+sudo -u postgres psql -c "CREATE DATABASE app;" && \
+curl -LsSf https://astral.sh/uv/install.sh | sh && \
+export PATH="/root/.local/bin:$PATH" && \
+cd /home/user/swapcard9_fastapi/backend && \
+uv sync && \
+source .venv/bin/activate && \
+python app/backend_pre_start.py && \
+alembic upgrade head && \
+python app/initial_data.py && \
+echo "✅ Setup complete! Now run: fastapi dev app/main.py"
+```
+
+Then start the server:
+```bash
+cd /home/user/swapcard9_fastapi/backend && source .venv/bin/activate && fastapi dev app/main.py
+```
+
+---
+
+## Detailed Step-by-Step Instructions
+
+If you prefer to understand each step, follow the detailed instructions below.
+
+## Step 1: Install Required Tools
 
 ### Install PostgreSQL
 
@@ -25,6 +113,22 @@ apt-get install -y postgresql postgresql-contrib
 
 # Start PostgreSQL service
 service postgresql start
+
+# Verify PostgreSQL is running
+service postgresql status
+```
+
+### Install uv (Python package manager)
+
+```bash
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Add to PATH (if just installed)
+export PATH="/root/.local/bin:$PATH"
+
+# Verify installation
+uv --version
 ```
 
 ## Step 2: Configure PostgreSQL
@@ -127,8 +231,18 @@ curl -X POST \
 
 ## Step 7: Run Tests
 
+**Prerequisites for tests:**
+- PostgreSQL must be running (`service postgresql start`)
+- Database must be configured (see Step 2)
+- Dependencies must be installed (`uv sync`)
+
+### Run Tests Quickly
+
 ```bash
-# Make sure you're in the backend directory with venv activated
+# Make sure PostgreSQL is running
+service postgresql status || service postgresql start
+
+# Navigate to backend directory and activate venv
 cd /home/user/swapcard9_fastapi/backend
 source .venv/bin/activate
 
@@ -136,7 +250,7 @@ source .venv/bin/activate
 pytest
 ```
 
-Or run tests with coverage:
+### Run Tests with Coverage Report
 
 ```bash
 cd /home/user/swapcard9_fastapi/backend
@@ -144,9 +258,33 @@ source .venv/bin/activate
 
 # Run tests with coverage report
 bash ./scripts/test.sh
+
+# Coverage report will be generated in htmlcov/index.html
 ```
 
-Expected output: **55 passed** (all tests should pass)
+### Complete Test Command from Clean Image
+
+If you want to run tests immediately after setup:
+
+```bash
+# Complete setup + run tests (from clean image)
+apt-get update && \
+apt-get install -y postgresql postgresql-contrib && \
+service postgresql start && \
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'changethis';" && \
+sudo -u postgres psql -c "CREATE DATABASE app;" && \
+curl -LsSf https://astral.sh/uv/install.sh | sh && \
+export PATH="/root/.local/bin:$PATH" && \
+cd /home/user/swapcard9_fastapi/backend && \
+uv sync && \
+source .venv/bin/activate && \
+python app/backend_pre_start.py && \
+alembic upgrade head && \
+python app/initial_data.py && \
+pytest
+```
+
+**Expected output:** ✅ **55 passed** (all tests should pass)
 
 **Note:** If tests fail with connection timeout errors, restart PostgreSQL:
 
@@ -226,20 +364,25 @@ alembic upgrade head
 python app/initial_data.py
 ```
 
-## Quick Start (All Commands)
+## Quick Start (Subsequent Runs)
 
-If everything is already installed, use these commands:
+After the initial setup is complete, use these commands to start the server on subsequent runs:
 
 ```bash
-# Start PostgreSQL
+# 1. Start PostgreSQL (if not already running)
 service postgresql start
 
-# Navigate and activate environment
+# 2. Navigate to backend directory and activate environment
 cd /home/user/swapcard9_fastapi/backend
 source .venv/bin/activate
 
-# Run the server
+# 3. Start the development server
 fastapi dev app/main.py
+```
+
+Or as a one-liner:
+```bash
+service postgresql start && cd /home/user/swapcard9_fastapi/backend && source .venv/bin/activate && fastapi dev app/main.py
 ```
 
 ## Known Warnings
