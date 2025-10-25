@@ -4,16 +4,64 @@ This guide provides step-by-step instructions to run the FastAPI backend locally
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Complete Setup from Clean Image](#complete-setup-from-clean-image) - **Start here for new environments**
-3. [Copy-Paste Single Command](#copy-paste-single-command-for-quick-setup)
-4. [Detailed Step-by-Step Instructions](#detailed-step-by-step-instructions)
-5. [Testing the API](#step-6-test-the-api)
-6. [Running Tests](#step-7-run-tests)
-7. [Quick Start (Subsequent Runs)](#quick-start-subsequent-runs)
-8. [Troubleshooting](#troubleshooting)
-9. [Test Results Summary](#test-results-summary)
-10. [Verified Functionality](#verified-functionality)
+1. [Quick Start with Setup Script](#quick-start-with-setup-script) - **⭐ Recommended Method**
+2. [Prerequisites](#prerequisites)
+3. [Manual Setup Instructions](#manual-setup-instructions) - Alternative to script
+4. [Testing the API](#testing-the-api)
+5. [Running Tests](#running-tests)
+6. [Troubleshooting](#troubleshooting)
+7. [Test Results Summary](#test-results-summary)
+8. [Verified Functionality](#verified-functionality)
+
+---
+
+## Quick Start with Setup Script
+
+**⭐ This is the recommended method** - use the automated setup script that handles everything for you.
+
+### Setup and Run Server
+
+```bash
+./setup_env.sh --run
+```
+
+This single command will:
+- Install PostgreSQL
+- Configure database and user
+- Install uv and Python dependencies
+- Run database migrations
+- Create initial superuser
+- Start the development server
+
+### Setup and Run Tests
+
+```bash
+./setup_env.sh --test
+```
+
+### Setup Only (no server/tests)
+
+```bash
+./setup_env.sh
+```
+
+### View Help
+
+```bash
+./setup_env.sh --help
+```
+
+### Subsequent Runs
+
+After initial setup, just run:
+
+```bash
+./setup_env.sh --run
+```
+
+The script is smart enough to detect what's already installed and skip those steps.
+
+---
 
 ## Prerequisites
 
@@ -22,9 +70,15 @@ This guide assumes you're starting from a clean Ubuntu/Debian-based system with:
 - Git available
 - Root or sudo access
 
-All other dependencies will be installed in the steps below.
+All other dependencies will be installed automatically by the setup script.
 
-## Complete Setup from Clean Image
+---
+
+## Manual Setup Instructions
+
+If you prefer to run commands manually instead of using the script, follow these instructions.
+
+### Complete Setup from Clean Image
 
 Run these commands in order to set up everything from scratch:
 
@@ -70,7 +124,7 @@ fastapi dev app/main.py
 
 The server will now be running at http://localhost:8000
 
-## Copy-Paste Single Command (For Quick Setup)
+### Copy-Paste Single Command
 
 If you want to run everything in one command, copy and paste this:
 
@@ -96,15 +150,13 @@ Then start the server:
 cd /home/user/swapcard9_fastapi/backend && source .venv/bin/activate && fastapi dev app/main.py
 ```
 
----
+### Detailed Step-by-Step Instructions
 
-## Detailed Step-by-Step Instructions
+If you prefer to understand each step in detail, follow these instructions.
 
-If you prefer to understand each step, follow the detailed instructions below.
+#### Step 1: Install Required Tools
 
-## Step 1: Install Required Tools
-
-### Install PostgreSQL
+**Install PostgreSQL**
 
 ```bash
 # Update package list and install PostgreSQL
@@ -118,7 +170,7 @@ service postgresql start
 service postgresql status
 ```
 
-### Install uv (Python package manager)
+**Install uv (Python package manager)**
 
 ```bash
 # Install uv if not already installed
@@ -131,7 +183,7 @@ export PATH="/root/.local/bin:$PATH"
 uv --version
 ```
 
-## Step 2: Configure PostgreSQL
+#### Step 2: Configure PostgreSQL
 
 ```bash
 # Set password for postgres user (matches .env file)
@@ -144,7 +196,7 @@ sudo -u postgres psql -c "CREATE DATABASE app;"
 sudo -u postgres psql -c "\l" | grep app
 ```
 
-## Step 3: Install Backend Dependencies
+#### Step 3: Install Backend Dependencies
 
 ```bash
 # Navigate to backend directory
@@ -157,7 +209,7 @@ uv sync
 source .venv/bin/activate
 ```
 
-## Step 4: Initialize Database
+#### Step 4: Initialize Database
 
 ```bash
 # Make sure you're in the backend directory with venv activated
@@ -174,7 +226,7 @@ alembic upgrade head
 python app/initial_data.py
 ```
 
-## Step 5: Run the Backend Server
+#### Step 5: Run the Backend Server
 
 ```bash
 # Make sure you're in the backend directory with venv activated
@@ -191,7 +243,9 @@ The server will be available at:
 - **Alternative Docs**: http://localhost:8000/redoc
 - **OpenAPI JSON**: http://localhost:8000/api/v1/openapi.json
 
-## Step 6: Test the API
+---
+
+## Testing the API
 
 ### Test Health Check
 
@@ -229,7 +283,9 @@ curl -X POST \
   "http://localhost:8000/api/v1/items/"
 ```
 
-## Step 7: Run Tests
+---
+
+## Running Tests
 
 **Prerequisites for tests:**
 - PostgreSQL must be running (`service postgresql start`)
@@ -364,9 +420,11 @@ alembic upgrade head
 python app/initial_data.py
 ```
 
-## Quick Start (Subsequent Runs)
+---
 
-After the initial setup is complete, use these commands to start the server on subsequent runs:
+## Manual Server Start (Without Script)
+
+If you prefer to start the server manually after setup:
 
 ```bash
 # 1. Start PostgreSQL (if not already running)
@@ -384,6 +442,8 @@ Or as a one-liner:
 ```bash
 service postgresql start && cd /home/user/swapcard9_fastapi/backend && source .venv/bin/activate && fastapi dev app/main.py
 ```
+
+**Recommended:** Use `./setup_env.sh --run` instead for a simpler experience.
 
 ## Known Warnings
 
